@@ -5,5 +5,5 @@ import taboolib.library.configuration.Conversion
 
 data class TrRedisMessage(
     @Conversion(ArrayConverter::class)
-    val data: Array<String>
+    val data: Array<String> = emptyArray()
 )
