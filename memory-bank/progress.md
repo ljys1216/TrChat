@@ -30,3 +30,10 @@ This file tracks the project's progress using a task list format.
 - [FAILED] 编译 TrChat 项目失败，测试环节出错 (TIMESTAMP: 2025/7/2 下午7:54:21)
 - [IN PROGRESS] 正在跳过测试并重试编译 (STARTED: 2025/7/2 下午7:54:21)
 - [SUCCESS] 成功编译 TrChat 项目 (跳过测试) (TIMESTAMP: 2025/7/2 下午7:54:39)
+* [2025-07-02 20:55:46] - 完成代码实现：修复 MiniMessage 开关，增加 Legacy Color 兼容，并添加 Debug 功能。
+* [2025-07-02 20:58:20] - [Debugging Task Status Update] - 完成了对 `MiniMessage`, `Legacy Color` 和 `Debug` 功能的验证和修复。
+- [2025-07-02 21:01:59] Started documentation for new `settings.yml` options (`Options.Debug`, `Color.MiniMessage`, `Color.Legacy`).
+- [2025-07-02 21:02:08] Completed documentation for new `settings.yml` options. Created `settings-documentation.md`.
+* [2025-07-02 21:19:25] - 完成了颜色代码协同工作和全面 Debug 功能的编码实现。
+* [2025-07-02 21:21:40] - [Debugging Task Status Update] - 完成了对颜色代码协同工作和 Debug 功能的全面验证和修复。修复了 `MessageColors.kt` 中旧版颜色代码（包括 `&amp;x` 格式）与 MiniMessage 的集成问题。
+* [2025-07-02 22:10:34] - COMPLETED: Final color processing refactor. Implemented the "Finalization Rendering Pattern" by creating `ColorUtils.kt` and modifying `Text.kt` and `Style.kt` to centralize color handling.

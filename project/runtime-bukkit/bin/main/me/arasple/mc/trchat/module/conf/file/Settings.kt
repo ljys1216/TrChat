@@ -1,5 +1,6 @@
 package me.arasple.mc.trchat.module.conf.file
 
+import me.arasple.mc.trchat.TrChat
 import me.arasple.mc.trchat.module.internal.service.Updater
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
@@ -25,6 +26,18 @@ object Settings {
 
     @ConfigNode("Options.Use-Packets", "settings.yml")
     var usePackets = true
+        private set
+
+    @ConfigNode("Options.Debug", "settings.yml")
+    var debug = false
+        private set
+
+    @ConfigNode("Color.MiniMessage", "settings.yml")
+    var miniMessage = true
+        private set
+
+    @ConfigNode("Color.Legacy", "settings.yml")
+    var legacyColor = true
         private set
 
     @ConfigNode("Channel.Default", "settings.yml")
@@ -54,6 +67,7 @@ object Settings {
     fun init() {
         conf.onReload {
             Kether.isAllowToleranceParser = conf.getBoolean("Options.Kether-Allow-Tolerance-Parser", true)
+            TrChat.isDebug = debug
         }
         if (conf.getBoolean("Options.Check-Update", true)) {
             submitAsync(delay = 20, period = 15 * 60 * 20) {

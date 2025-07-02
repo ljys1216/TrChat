@@ -58,7 +58,7 @@ class MsgComponent(val defaultColor: List<Pair<CustomColor, Condition?>>, style:
         }
 
         val defaultColor = sender.session.getColor(defaultColor.firstOrNull { it.second.pass(sender) }?.first)
-        val useMiniMessage = Settings.conf.getBoolean("Color.MiniMessage", true) && sender.hasPermission("trchat.color.minimessage")
+        val useMiniMessage = Settings.miniMessage && sender.hasPermission("trchat.color.minimessage")
 
         // 分割为多个ComponentText
         for (part in parser.readToFlatten(message)) {

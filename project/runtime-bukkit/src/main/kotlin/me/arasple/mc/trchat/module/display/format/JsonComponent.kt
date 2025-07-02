@@ -21,13 +21,18 @@ open class JsonComponent(
 ) {
 
     open fun toTextComponent(sender: CommandSender, vararg vars: String): ComponentText {
-        val component = text?.firstOrNull { it.condition.pass(sender) }?.let {
-            try {
-                AdventureComponent(MiniMessage.miniMessage().deserialize(it.content(sender, *vars)))
-            } catch (e: Throwable) {
-                it.process(sender, true, *vars)
-            }
-        } ?: Components.empty()
+       val component = text?.firstOrNull { it.condition.pass(sender) }?.let {
+           val content = it.content(sender, *vars)
+           if (Settings.miniMessage) {
+               try {
+                   AdventureComponent(MiniMessage.miniMessage().deserialize(content))
+               } catch (e: Throwable) {
+                   it.process(sender, *vars)
+               }
+           } else {
+               it.process(sender, *vars)
+           }
+       } ?: Components.empty()
         style.forEach {
             it.applyTo(component, sender, *vars)
         }

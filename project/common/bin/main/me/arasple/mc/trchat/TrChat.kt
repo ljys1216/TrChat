@@ -10,6 +10,8 @@ object TrChat {
 
     private var api: TrChatAPI? = null
 
+    var isDebug = false
+
     fun api(): TrChatAPI {
         return api ?: error("TrChat is loading or failed to load!")
     }

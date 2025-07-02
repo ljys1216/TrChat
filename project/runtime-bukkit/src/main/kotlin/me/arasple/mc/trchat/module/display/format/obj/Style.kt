@@ -2,8 +2,10 @@ package me.arasple.mc.trchat.module.display.format.obj
 
 import me.arasple.mc.trchat.module.conf.file.Settings
 import me.arasple.mc.trchat.module.internal.script.Condition
-import me.arasple.mc.trchat.util.*
-import me.arasple.mc.trchat.util.color.colorify
+import me.arasple.mc.trchat.util.color.colorize
+import me.arasple.mc.trchat.util.parseInline
+import me.arasple.mc.trchat.util.pass
+import me.arasple.mc.trchat.util.setPlaceholders
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.command.CommandSender
 import taboolib.common.util.replaceWithOrder
@@ -33,10 +35,10 @@ sealed interface Style {
 
         data class Text(override val contents: List<Pair<String, Condition?>>) : Hover {
             override fun process(component: ComponentText, content: String) {
-                if (Settings.simpleHover) {
-                    component.hoverText(content.parseSimple())
-                } else {
+                if (Settings.miniMessage) {
                     component.hoverText(AdventureComponent(MiniMessage.miniMessage().deserialize(content)))
+                } else {
+                    component.hoverText(content)
                 }
             }
         }
@@ -104,7 +106,7 @@ sealed interface Style {
                 }
             }
             if (content != null) {
-                process(component, content)
+                process(component, content.colorize(sender))
             }
         }
 

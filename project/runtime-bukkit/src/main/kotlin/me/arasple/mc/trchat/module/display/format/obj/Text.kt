@@ -3,7 +3,7 @@ package me.arasple.mc.trchat.module.display.format.obj
 import me.arasple.mc.trchat.module.internal.hook.HookPlugin
 import me.arasple.mc.trchat.module.internal.script.Condition
 import me.arasple.mc.trchat.module.internal.script.kether.KetherHandler
-import me.arasple.mc.trchat.util.color.colorify
+import me.arasple.mc.trchat.util.color.colorize
 import me.arasple.mc.trchat.util.isDragonCoreHooked
 import me.arasple.mc.trchat.util.papiRegex
 import me.arasple.mc.trchat.util.setPlaceholders
@@ -29,14 +29,11 @@ class Text(val content: String, val condition: Condition?) {
             }
             text = HookPlugin.getItemsAdder().replaceFontImages(text, null)
         }
-        return text.replaceWithOrder(*vars)
+        return text.replaceWithOrder(*vars).colorize(sender)
     }
 
-    fun process(sender: CommandSender, color: Boolean = true, vararg vars: String): ComponentText {
-        var text = content(sender, *vars)
-        if (color) {
-            text = text.colorify()
-        }
+    fun process(sender: CommandSender, vararg vars: String): ComponentText {
+        val text = content(sender, *vars)
         return if (isDragonCoreHooked) {
             Components.text(text, color = false)
         } else {

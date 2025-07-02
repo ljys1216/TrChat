@@ -11,6 +11,7 @@ Options:
   Cheat-Client-Secure-Chat: true
   Use-Packets: true
   Disabled-Commands: []
+  Debug: false
 
 Channel:
   Default: 'Normal'
@@ -45,6 +46,7 @@ Color:
   Anvil: true
   Book: true
   MiniMessage: true
+  Legacy: true
 
 Simple-Component:
   Hover: false

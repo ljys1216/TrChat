@@ -1,32 +1,34 @@
-# Decision Log
+# 决策日志
 
-This file records architectural and implementation decisions using a list format.
-2025-07-02 19:22:27 - Log of updates made.
+## 2025-07-02
 
-*
-      
----
-### Decision
-[2025-07-02 19:27:48] - 采用基于配置的条件分支策略在 TrChat 中集成 MiniMessage 支持。
-
-**Rationale:**
-为了在不破坏现有功能的情况下引入 MiniMessage，最直接且风险最低的方法是添加一个配置开关。这使得服务器管理员可以根据自己的需求选择性地启用新功能。在核心的 `MsgComponent.kt` 中进行直接修改，可以避免过度设计，并使逻辑集中，易于理解和维护。
-
-**Implications/Details:**
-*   **配置文件**: 需要在 `settings.yml` 中添加 `use_minimessage: boolean` 选项。
-*   **核心代码**: 需要修改 `MsgComponent.kt` 的 `build` 方法，根据 `use_minimessage` 的值选择 `MiniMessage.miniMessage().deserialize()` 或现有的颜色处理逻辑。
-*   **依赖**: `build.gradle.kts` 文件需要添加 `net.kyori:adventure-text-minimessage` 依赖。
-*   **错误处理**: MiniMessage 解析代码块必须包含 `try-catch` 机制，以处理无效输入。
+*   **审查员**: 🛡️ 安全审查员
+*   **任务**: 对新的颜色处理和日志系统进行最终安全审查。
+*   **发现**:
+    *   **中等风险**: 在 `RedisManager.kt` 中发现信息泄露风险。调试日志会记录完整的 `TrRedisMessage` 对象，可能暴露敏感的玩家间通信内容。
+    *   **已确认安全**:
+        *   `MessageColors.kt` 中的颜色处理逻辑对畸形输入具有弹性。
+        *   `Databases.kt` 中的日志记录不包含敏感凭证。
+        *   `HexUtils.java` 中缓解 DoS 攻击的循环上限依然有效。
+*   **决策与理由**:
+    *   **决策**: 修改 `RedisManager.kt` 中的调试日志，不再记录完整的消息对象，而是记录消息类型。
+    *   **理由**: 此更改可以在保留必要调试信息（消息类型）的同时，彻底消除敏感信息（如私聊内容）被记录到日志中的风险，从而保护用户隐私。
+*   **状态**: 已修复并验证。
 
 ---
-### Decision (Debug)
-[2025-07-02 20:22:20] - 修复聊天格式中 MiniMessage 不生效的问题
+---
+### 根本性颜色代码修复方案
+[2025-07-02 21:51:00] - 最终架构审查确认
 
-**Rationale:**
-问题根源在于 `Text.process()` 方法过早地调用了 `.colorify()`，破坏了 MiniMessage 标签。同时，`Style.Hover.Text` 的处理逻辑也没有考虑 MiniMessage。解决方案是重构 `Text.kt`，分离出 `content()` 方法以获取原始文本，然后在 `JsonComponent.kt` 和 `Style.kt` 中根据 `Settings.colorType` 条件性地调用 MiniMessage 解析器。
+**决策:**
+采纳并实施统一的颜色代码处理方案。该方案的核心是在数据流的最终节点——核心数据类 `Text.kt` 和 `Style.kt`——输出内容之前，通过一个统一的 `String.colorize(sender)` 扩展函数来处理所有颜色代码。
 
-**Details:**
-*   **Affected components/files**:
-    *   `project/runtime-bukkit/src/main/kotlin/me/arasple/mc/trchat/module/display/format/obj/Text.kt`
-    *   `project/runtime-bukkit/src/main/kotlin/me/arasple/mc/trchat/module/display/format/JsonComponent.kt`
-    *   `project/runtime-bukkit/src/main/kotlin/me/arasple/mc/trchat/module/display/format/obj/Style.kt`
+**理由:**
+1.  **解决根本原因**: 此前的颜色问题源于在数据流的多个、不一致的节点上进行颜色处理。本方案将颜色处理统一收敛到数据模型的“出口”，确保了所有通过标准流程构建的聊天组件内容都经过了唯一、一致的颜色转换。
+2.  **单一职责原则**: 创建 `colorize(sender)` 扩展函数，封装了基于权限的颜色替换逻辑，使其职责单一且清晰。
+3.  **职责明确**: `Text.kt` 和 `Style.kt` 作为构建最终 `Component` 的直接数据源，是执行最终渲染（包括着色）的最恰当位置。这强化了它们作为数据模型的角色。
+4.  **健壮性与可维护性**: 该方案创建了一个可预测、易于理解的颜色处理模式，极大地降低了未来引入类似错误的风险，提升了代码的可维护性。
+
+**实施细节:**
+*   在 `Text.kt` 的 `content()` 方法返回字符串前调用 `colorize(sender)`。
+*   在 `Style.kt` 的 `applyTo` 方法中，对所有从配置加载的字符串（如 `hover`, `click`），在处理完变量替换后，调用 `colorize(sender)`。

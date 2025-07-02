@@ -17,6 +17,7 @@ import me.arasple.mc.trchat.module.display.format.obj.Text
 import me.arasple.mc.trchat.module.display.function.CustomFunction
 import me.arasple.mc.trchat.module.display.function.Function
 import me.arasple.mc.trchat.module.internal.script.Reaction
+import me.arasple.mc.trchat.util.TrChatLogger
 import me.arasple.mc.trchat.util.color.CustomColor
 import me.arasple.mc.trchat.util.print
 import me.arasple.mc.trchat.util.toCondition
@@ -61,8 +62,10 @@ object Loader {
     }
 
     fun loadChannels(sender: ProxyCommandSender) {
+        TrChatLogger.info("Loading channels...")
         measureTimeMillis { loadChannels() }.let {
             sender.sendLang("Plugin-Loaded-Channels", Channel.channels.size, it)
+            TrChatLogger.info("Loaded ${Channel.channels.size} channels in ${it}ms.")
         }
     }
 
@@ -70,7 +73,9 @@ object Loader {
         Channel.channels.values.forEach { it.unregister() }
         Channel.channels.clear()
 
-        filterChannelFiles(folder).forEach {
+        val files = filterChannelFiles(folder)
+        TrChatLogger.debug { "Found ${files.size} channel files." }
+        files.forEach {
 //            if (FileWatcher.INSTANCE.hasListener(it)) {
 //                loadChannel(it)
 //            } else {
@@ -85,8 +90,10 @@ object Loader {
 
     fun loadChannel(file: File) {
         try {
+            TrChatLogger.debug { "Loading channel from file ${file.name}..." }
             loadChannel(file.nameWithoutExtension, YamlConfiguration.loadConfiguration(file)).let { channel ->
                 Channel.channels[channel.id] = channel
+                TrChatLogger.debug { "Channel ${channel.id} loaded." }
             }
         } catch (t: Throwable) {
             t.print("Channel file ${file.name} loaded failed!")
@@ -184,14 +191,18 @@ object Loader {
     }
 
     fun loadFunctions(sender: ProxyCommandSender) {
+        TrChatLogger.info("Loading functions...")
         measureTimeMillis { loadFunctions() }.let {
             sender.sendLang("Plugin-Loaded-Functions", Function.functions.size, it)
+            TrChatLogger.info("Loaded ${Function.functions.size} functions in ${it}ms.")
         }
     }
 
     fun loadFunctions() {
         val customs = Functions.conf.getMap<String, ConfigurationSection>("Custom")
+        TrChatLogger.debug { "Found ${customs.size} custom functions." }
         val functions = customs.map { (id, map) ->
+            TrChatLogger.debug { "Loading function $id..." }
             val condition = map.getString("condition")?.toCondition()
             val priority = map.getInt("priority", 100)
             val regex = map.getString("pattern")!!.toRegex()

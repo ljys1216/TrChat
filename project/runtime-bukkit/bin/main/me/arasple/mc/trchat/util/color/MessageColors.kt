@@ -1,8 +1,11 @@
 package me.arasple.mc.trchat.util.color
 
+import me.arasple.mc.trchat.module.conf.file.Settings
+import me.arasple.mc.trchat.util.TrChatLogger
 import org.bukkit.command.CommandSender
 import taboolib.common.platform.Platform
 import taboolib.common.platform.PlatformSide
+import java.util.regex.Pattern
 
 /**
  * @author Arasple
@@ -32,7 +35,18 @@ object MessageColors {
     @JvmOverloads
     fun replaceWithPermission(sender: CommandSender, s: String, type: Type = Type.DEFAULT): String {
         var string = s
+        TrChatLogger.debug { "Processing message color for ${sender.name}: $string" }
 
+        if (Settings.miniMessage) {
+            if (Settings.legacyColor) {
+                string = preprocessLegacyColors(string)
+                TrChatLogger.debug { "Preprocessed legacy colors for MiniMessage: $string" }
+            }
+            // MiniMessage will handle all color parsing
+            return string
+        }
+
+        // Legacy color processing
         if (type == Type.ANVIL && sender.hasPermission("trchat.color.anvil.*")) {
             return string.colorify()
         }
@@ -47,7 +61,6 @@ object MessageColors {
             return string.colorify()
         }
 
-        // 2025/6/18 https://github.com/TrPlugins/TrChat/issues/477
         if (sender.hasPermission(COLOR_PERMISSION_NODE + "rainbow")) {
             string = string.parseRainbow()
         }
@@ -64,7 +77,79 @@ object MessageColors {
             string = string.replace(color, CustomColor.get(color).color)
         }
 
-        return string
+        val result = string.colorify()
+        TrChatLogger.debug { "Final colored message: $result" }
+        return result
+    }
+
+    private fun preprocessLegacyColors(text: String): String {
+        var processedText = text
+        val buffer = StringBuffer()
+
+        // Pattern for &c, &l, etc.
+        val legacyPattern = Pattern.compile("(?i)&([0-9A-FK-OR])")
+        var matcher = legacyPattern.matcher(processedText)
+        while (matcher.find()) {
+            val replacement = when (matcher.group(1).lowercase()) {
+                "c" -> "<red>"
+                "a" -> "<green>"
+                "e" -> "<yellow>"
+                "b" -> "<aqua>"
+                "d" -> "<light_purple>"
+                "f" -> "<white>"
+                "0" -> "<black>"
+                "1" -> "<dark_blue>"
+                "2" -> "<dark_green>"
+                "3" -> "<dark_aqua>"
+                "4" -> "<dark_red>"
+                "5" -> "<dark_purple>"
+                "6" -> "<gold>"
+                "7" -> "<gray>"
+                "8" -> "<dark_gray>"
+                "9" -> "<blue>"
+                "l" -> "<bold>"
+                "o" -> "<italic>"
+                "n" -> "<underline>"
+                "m" -> "<strikethrough>"
+                "k" -> "<obfuscated>"
+                "r" -> "<reset>"
+                else -> null
+            }
+            if (replacement != null) {
+                matcher.appendReplacement(buffer, replacement)
+                TrChatLogger.debug { "Replaced legacy color '&${matcher.group(1)}' with '$replacement'" }
+            }
+        }
+        matcher.appendTail(buffer)
+        processedText = buffer.toString()
+        buffer.setLength(0)
+
+        // Pattern for &#RRGGBB
+        val hexPattern = Pattern.compile("&#([0-9A-Fa-f]{6})")
+        matcher = hexPattern.matcher(processedText)
+        while (matcher.find()) {
+            val hexCode = matcher.group(1)
+            val replacement = "<#$hexCode>"
+            matcher.appendReplacement(buffer, replacement)
+            TrChatLogger.debug { "Replaced legacy hex color '&#$hexCode' with '$replacement'" }
+        }
+        matcher.appendTail(buffer)
+        processedText = buffer.toString()
+        buffer.setLength(0)
+
+        // Pattern for &x&R&R&G&G&B&B
+        val spigotHexPattern = Pattern.compile("(?i)&x(&[0-9A-F]){6}")
+        matcher = spigotHexPattern.matcher(processedText)
+        while (matcher.find()) {
+            val hexCode = matcher.group().replace(Regex("(?i)&x|&"), "")
+            val replacement = "<#$hexCode>"
+            matcher.appendReplacement(buffer, replacement)
+            TrChatLogger.debug { "Replaced legacy spigot hex color '${matcher.group()}' with '$replacement'" }
+        }
+        matcher.appendTail(buffer)
+        processedText = buffer.toString()
+
+        return processedText
     }
 
     private fun getColorsFromPermissions(sender: CommandSender, prefix: String): List<String> {

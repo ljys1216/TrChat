@@ -7,6 +7,7 @@ import me.arasple.mc.trchat.api.ComponentManager
 import me.arasple.mc.trchat.api.event.TrChatReceiveEvent
 import me.arasple.mc.trchat.api.nms.NMS
 import me.arasple.mc.trchat.module.conf.file.Settings
+import me.arasple.mc.trchat.util.TrChatLogger
 import me.arasple.mc.trchat.util.data
 import me.arasple.mc.trchat.util.toUUID
 import net.kyori.adventure.text.Component
@@ -73,6 +74,7 @@ object BukkitComponentManager : ComponentManager {
         } else {
             event.message
         }
+        TrChatLogger.debug { "Sending component to ${commandSender.name} (sender: $uuid): ${newComponent.toRawMessage().take(256)}" }
         if (commandSender is Player) {
             NMS.instance.sendMessage(commandSender, newComponent, event.sender, Settings.usePackets)
         } else {

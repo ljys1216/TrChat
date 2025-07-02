@@ -73,8 +73,9 @@ public final class HexUtils {
     public static String parseRainbow(String message) {
         String parsed = message;
 
+        int process = 0;
         Matcher matcher = RAINBOW_PATTERN.matcher(parsed);
-        while (matcher.find()) {
+        while (matcher.find() && process++ < 50) {
             StringBuilder parsedRainbow = new StringBuilder();
 
             // Possible parameters and their defaults
@@ -147,8 +148,9 @@ public final class HexUtils {
     public static String parseGradients(String message) {
         String parsed = message;
 
+        int process = 0;
         Matcher matcher = GRADIENT_PATTERN.matcher(parsed);
-        while (matcher.find()) {
+        while (matcher.find() && process++ < 50) {
             StringBuilder parsedGradient = new StringBuilder();
 
             int speed = -1;
